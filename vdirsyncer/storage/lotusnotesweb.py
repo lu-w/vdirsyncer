@@ -339,7 +339,8 @@ class LotusNotesWebStorage(Storage):
             until = datetime.date.today()
             until += datetime.timedelta(weeks=8)
         if start is None:
-            start = until - datetime.timedelta(weeks=8)
+            start = datetime.date.today()
+            start -= datetime.timedelta(weeks=8)
 
         url = CAL_URL.format(
             baseurl=self.baseurl,
