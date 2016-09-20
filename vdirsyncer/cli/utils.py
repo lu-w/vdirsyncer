@@ -34,6 +34,8 @@ class _StorageIndex(object):
             carddav='vdirsyncer.storage.dav.CardDAVStorage',
             filesystem='vdirsyncer.storage.filesystem.FilesystemStorage',
             http='vdirsyncer.storage.http.HttpStorage',
+            lotusnotesweb=(
+                'vdirsyncer.storage.lotusnotesweb.LotusNotesWebStorage'),
             singlefile='vdirsyncer.storage.singlefile.SingleFileStorage',
             google_calendar='vdirsyncer.storage.google.GoogleCalendarStorage',
             google_contacts='vdirsyncer.storage.google.GoogleContactsStorage'

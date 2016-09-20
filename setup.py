@@ -20,6 +20,8 @@ requirements = [
     # https://github.com/pimutils/vdirsyncer/issues/478
     'click-threading>=0.2',
 
+    'ics>=0.3',
+
     # !=2.9.0: https://github.com/kennethreitz/requests/issues/2930
     #
     # >=2.4.1: https://github.com/shazow/urllib3/pull/444
