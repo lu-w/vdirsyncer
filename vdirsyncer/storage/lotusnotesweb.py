@@ -191,6 +191,7 @@ class LotusCalEntry(object):
     @property
     def from_date(self):
         v = self._from_date()
+        v = v.replace(tzinfo=pytz.utc)
         if self.all_day_event:
             return v.replace(hour=0, minute=0, second=0, microsecond=0)
         return v
@@ -200,8 +201,7 @@ class LotusCalEntry(object):
         return self.type in (CalEntryType.ALL_DAY_EVENT,
                              CalEntryType.ANNIVERSARY)
 
-    @property
-    def to_date(self):
+    def _to_date(self):
         if 'datetimelist' in self.entrydata[5]:
             if len(self.entrydata[5]['datetimelist']['datetime']) == 1:
                 v = self.entrydata[5]['datetimelist']['datetime'][0]['0']
@@ -216,6 +216,14 @@ class LotusCalEntry(object):
         # for line in self.entrydata:
             # print(line)
         raise KeyError("Entry misses from_date or not parseable")
+
+    @property
+    def to_date(self):
+        v = self._to_date()
+        v = v.replace(tzinfo=pytz.utc)
+        if self.all_day_event:
+            return v.replace(hour=0, minute=0, second=0, microsecond=0)
+        return v
 
     @property
     def subject(self):
