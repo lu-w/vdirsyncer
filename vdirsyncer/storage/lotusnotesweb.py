@@ -236,9 +236,13 @@ class LotusCalEntry(object):
     @property
     def location(self):
         if 'textlist' in self.entrydata[7]:
-            if len(self.entrydata[7]['textlist']['text']) < 2:
-                return None
-            return self.entrydata[7]['textlist']['text'][1]['0']
+            if self.type == CalEntryType.MEETING:
+                if len(self.entrydata[7]['textlist']['text']) > 2:
+                    return self.entrydata[7]['textlist']['text'][1]['0']
+            elif self.type == CalEntryType.APPOINTMENT:
+                if len(self.entrydata[7]['textlist']['text']) > 1:
+                    return self.entrydata[7]['textlist']['text'][1]['0']
+            return None
         else:
             return None
         # TODO raise
