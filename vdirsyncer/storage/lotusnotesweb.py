@@ -22,6 +22,10 @@ Form=s_ReadViewEntries_JSON&Count=-1&KeyType=time&TZType=UTC&\
 StartKey={StartKey}&UntilKey={UntilKey}&\
 PresetFields=DBQuotaInfo;1,DBQuotaInfo;1,FolderName;(%24Calendar),hc;\
 %24151|%24152|%24153|%24154|%24160|%24UserData|%24Cal"""
+DETAIL_URL = """{baseurl}/mail/{calendar}.nsf/($Calendar)/{uid}/\
+?OpenDocument&Form=l_JSVars&PresetFields=s_HandleAttachmentNames;\
+1,s_HandleMime;1,s_OpenUI;1,s_HideRemoteImage;1,ThisStartDate;\
+{ThisStartDate},s_ProcessRR;1"""
 
 
 def prepare_auth(auth, username, password):
