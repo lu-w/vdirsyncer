@@ -20,7 +20,7 @@ requirements = [
     # https://github.com/pimutils/vdirsyncer/issues/478
     'click-threading>=0.2',
 
-    'ics>=0.3',
+    'icalendar>=3.10',
 
     # !=2.9.0: https://github.com/kennethreitz/requests/issues/2930
     #

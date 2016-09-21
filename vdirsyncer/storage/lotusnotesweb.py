@@ -7,7 +7,8 @@ import re
 
 from enum import Enum
 
-import ics
+import pytz
+import icalendar
 
 from .base import Item, Storage
 from .. import exceptions
@@ -255,21 +256,42 @@ class LotusCalEntry(object):
     def status(self):
         return self.entrydata[11]['text']['0']
 
+
     def to_ics_event(self, freebusy=False):
-        event = ics.Event(
-            uid='{}@{}.ibm'.format(self.unid, self.position)
-        )
+        event = icalendar.Event()
+        event.add('uid', '{}@{}.ibm'.format(self.unid, self.position))
+
         if freebusy:
-            event.name = "busy"
+            event.add('summary', 'busy')
         else:
-            event.name = self.subject
-        event.begin = self.from_date
+            event.add('summary', self.subject)
+            if self.type == CalEntryType.MEETING:
+                event.add('categories', 'Meeting')
+            elif self.type == CalEntryType.ANNIVERSARY:
+                event.add('categories', 'Anniversary')
+
         if self.all_day_event:
-            event.make_all_day()
+            # all day events have a date only
+            event.add('dtstart', self.from_date.date())
+            event.add('dtend', self.to_date.date())
         else:
-            event.end = self.to_date
+            event.add('dtstart', self.from_date)
+            event.add('dtend', self.to_date)
+
+        if not freebusy and self.created_by:
+            event.add('organzier', self.created_by)
+
+		# event.add('dtstamp', datetime(2005,4,4,0,10,0,tzinfo=pytz.utc))
         if not freebusy and self.location:
-            event.location = self.location
+            event.add('location', self.location)
+
+        if self.status.lower() in ("angenommen", "confirmed"):
+            event.add('status', 'confirmed')
+        elif self.status.lower() in ("ghosts", "tentative",):
+            event.add('status', 'tentative')
+        elif self.status.lower() in ("cancled",):
+            event.add('status', 'cancled')
+
         return event
 
     def dump(self):
@@ -392,7 +414,11 @@ class LotusNotesWebStorage(Storage):
             # parse each item json -> ICS -> vdir.Item
             for entry in content:
                 entry = LotusCalEntry(entry)
-                item = Item(str(entry.to_ics_event(self.freebusy)))
+                entry.dump()
+                item = Item(
+                    entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").replace('\r\n', '\n').strip()
+                )
+                print(item.raw)
                 etag = item.hash
                 self._items[item.ident] = item, etag
 
