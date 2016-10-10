@@ -373,6 +373,7 @@ class LotusNotesWebStorage(Storage):
         self.freebusy = freebusy
 
         self.baseurl = url
+        self.verbose = False
 
     def _calendar_url(self, calendar, start=None, until=None):
         if until is None:
@@ -419,12 +420,14 @@ class LotusNotesWebStorage(Storage):
             # parse each item json -> ICS -> vdir.Item
             for entry in content:
                 entry = LotusCalEntry(entry)
-                entry.dump()
+                if self.verbose:
+                    entry.dump()
                 item = Item(
                     # entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").replace('\r\n', '\n').strip()
                     entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").strip()
                 )
-                print(item.raw)
+                if self.verbose:
+                    print(item.raw)
                 etag = item.hash
                 self._items[item.ident] = item, etag
 
