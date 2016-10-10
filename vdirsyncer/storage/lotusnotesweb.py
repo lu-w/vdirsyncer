@@ -296,7 +296,9 @@ class LotusCalEntry(object):
         elif self.status.lower() in ("cancled",):
             event.add('status', 'cancled')
 
-        return event
+        calendar = icalendar.Calendar()
+        calendar.add_component(event)
+        return calendar
 
     def dump(self):
         print("Position:", self.position)
@@ -420,7 +422,8 @@ class LotusNotesWebStorage(Storage):
                 entry = LotusCalEntry(entry)
                 entry.dump()
                 item = Item(
-                    entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").replace('\r\n', '\n').strip()
+                    # entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").replace('\r\n', '\n').strip()
+                    entry.to_ics_event(self.freebusy).to_ical().decode("utf-8").strip()
                 )
                 print(item.raw)
                 etag = item.hash
