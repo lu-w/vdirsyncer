@@ -3,6 +3,7 @@
 
 import datetime
 import json
+import logging
 import re
 
 from enum import Enum
@@ -15,6 +16,8 @@ from .. import exceptions
 from ..utils import expand_path
 from ..utils.http import request
 
+lotus_logger = logging.getLogger(__name__)
+
 USERAGENT = 'vdirsyncer'
 
 CAL_URL = """{baseurl}/mail/{calendar}.nsf/iNotes/Proxy/?OpenDocument&\
@@ -26,6 +29,7 @@ DETAIL_URL = """{baseurl}/mail/{calendar}.nsf/($Calendar)/{uid}/\
 ?OpenDocument&Form=l_JSVars&PresetFields=s_HandleAttachmentNames;\
 1,s_HandleMime;1,s_OpenUI;1,s_HideRemoteImage;1,ThisStartDate;\
 {ThisStartDate},s_ProcessRR;1"""
+LOGIN_FAILED_PATTERN = "<!DOCTYPE HTML PUBLIC.*Please identify yourself.*"
 
 
 def prepare_auth(auth, username, password):
@@ -401,6 +405,10 @@ class LotusNotesWebStorage(Storage):
                                **self._settings)
             # recoding
             content = req_data.content.decode('utf-8').replace('\n', '')
+            if re.match(LOGIN_FAILED_PATTERN, content) is not None:
+                lotus_logger.debug("Login failed")
+                raise exceptions.UserError("login failed.")
+
             # remove the comment
             content = re.sub("/[*][^*]*[*]/", "", content)
             # fix the json string
@@ -431,6 +439,7 @@ class LotusNotesWebStorage(Storage):
                 etag = item.hash
                 self._items[item.ident] = item, etag
 
+        lotus_logger.debug("got {} items".format(len(self._items.items())))
         return ((href, etag) for href, (item, etag) in self._items.items())
 
     def get(self, href):
