@@ -94,6 +94,19 @@ def prepare_client_cert(cert):
 
 
 LOTUSNOTESWEB_STORAGE_PARAMETERS = '''
+
+    You can set a timerange to synchronize with the parameters ``start_date``
+    and ``end_date``. Inside those parameters, you can use any Python
+    expression to return a valid :py:class:`datetime.datetime` object. For
+    example, the following would synchronize the timerange from one year in the
+    past to one year in the future::
+
+        start_date = datetime.now() - timedelta(days=365)
+        end_date = datetime.now() + timedelta(days=365)
+
+    Either both or none have to be specified. The default is to synchronize
+    from 8 weeks in past to 8 weeks in future.
+
     :param username: Username for authentication.
     :param password: Password for authentication.
     :param verify: Verify SSL certificate, default True. This can also be a
@@ -110,6 +123,8 @@ LOTUSNOTESWEB_STORAGE_PARAMETERS = '''
     :param auth_cert: Optional. Either a path to a certificate with a client
         certificate and the key or a list of paths to the files with them.
     :param useragent: Default ``vdirsyncer``.
+    :param start_date: Start date of timerange to show, default -inf.
+    :param end_date: End date of timerange to show, default +inf.
     :param calendars: which calendars to query. Default ``username``.
     :param freebusy: whether to include subject and location. Default ``username``.
 '''
@@ -349,6 +364,9 @@ class LotusNotesWebStorage(Storage):
         password = password
     '''
 
+    start_date = None
+    end_date = None
+
     storage_name = 'lotusnotesweb'
     read_only = True
     _repr_attributes = ('username', 'url', 'calendars', 'freebusy')
@@ -356,6 +374,7 @@ class LotusNotesWebStorage(Storage):
 
     def __init__(self, url, username='', password='', verify=True, auth=None,
                  useragent=USERAGENT, verify_fingerprint=None, auth_cert=None,
+                 start_date=None, end_date=None,
                  calendars=None, freebusy=None,
                  **kwargs):
         super(LotusNotesWebStorage, self).__init__(**kwargs)
@@ -366,6 +385,25 @@ class LotusNotesWebStorage(Storage):
             'latin1_fallback': False,
         }
         self._settings.update(prepare_verify(verify, verify_fingerprint))
+
+        if (start_date is None) != (end_date is None):
+            raise exceptions.UserError('If start_date is given, '
+                                       'end_date has to be given too.')
+        elif start_date is not None and end_date is not None:
+            namespace = dict(datetime.__dict__)
+            namespace['start_date'] = self.start_date = \
+                (eval(start_date, namespace)
+                 if isinstance(start_date, (bytes, str))
+                 else start_date)
+            self.end_date = \
+                (eval(end_date, namespace)
+                 if isinstance(end_date, (bytes, str))
+                 else end_date)
+        else:
+            self.start_date = datetime.date.today()
+            self.start_date -= datetime.timedelta(weeks=8)
+            self.end_date = datetime.date.today()
+            self.end_date += datetime.timedelta(weeks=8)
 
         self.username, self.password = username, password
         self.useragent = useragent
@@ -379,18 +417,12 @@ class LotusNotesWebStorage(Storage):
         self.baseurl = url
         self.verbose = False
 
-    def _calendar_url(self, calendar, start=None, until=None):
-        if until is None:
-            until = datetime.date.today()
-            until += datetime.timedelta(weeks=8)
-        if start is None:
-            start = until - datetime.timedelta(weeks=8)
-
+    def _calendar_url(self, calendar):
         url = CAL_URL.format(
             baseurl=self.baseurl,
             calendar=calendar,
-            StartKey=start.strftime(LotusCalEntry.DATEFORMAT),
-            UntilKey=until.strftime(LotusCalEntry.DATEFORMAT)
+            StartKey=self.start_date.strftime(LotusCalEntry.DATEFORMAT),
+            UntilKey=self.end_date.strftime(LotusCalEntry.DATEFORMAT)
         )
         return url
 
