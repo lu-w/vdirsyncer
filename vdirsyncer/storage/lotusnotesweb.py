@@ -216,14 +216,18 @@ class LotusCalEntry(object):
     def from_date(self):
         v = self._from_date()
         v = v.replace(tzinfo=pytz.utc)
-        if self.all_day_event:
+        if self.is_all_day_event:
             return v.replace(hour=0, minute=0, second=0, microsecond=0)
         return v
 
     @property
-    def all_day_event(self):
+    def is_all_day_event(self):
         return self.type in (CalEntryType.ALL_DAY_EVENT,
                              CalEntryType.ANNIVERSARY)
+
+    @property
+    def is_reminder(self):
+        return self.type == CalEntryType.REMINDER
 
     def _to_date(self):
         if 'datetimelist' in self.entrydata[5]:
@@ -233,19 +237,19 @@ class LotusCalEntry(object):
         elif 'datetime' in self.entrydata[5]:
             v = self.entrydata[5]['datetime']['0']
             return datetime.datetime.strptime(v, self.DATEFORMAT)
-        elif self.all_day_event:
+        elif self.is_all_day_event:
             fd = self.from_date
             # fd = fd.replace(hour=0, minute=0, second=0, microsecond=0)
             return fd + datetime.timedelta(days=1)
         # for line in self.entrydata:
             # print(line)
-        raise KeyError("Entry misses from_date or not parseable")
+        raise KeyError("Entry misses to_date or not parseable")
 
     @property
     def to_date(self):
         v = self._to_date()
         v = v.replace(tzinfo=pytz.utc)
-        if self.all_day_event:
+        if self.is_all_day_event:
             return v.replace(hour=0, minute=0, second=0, microsecond=0)
         return v
 
@@ -293,7 +297,7 @@ class LotusCalEntry(object):
             elif self.type == CalEntryType.ANNIVERSARY:
                 event.add('categories', 'Anniversary')
 
-        if self.all_day_event:
+        if self.is_all_day_event:
             # all day events have a date only
             event.add('dtstart', self.from_date.date())
             event.add('dtend', self.to_date.date())
@@ -325,7 +329,8 @@ class LotusCalEntry(object):
         for line in self.entrydata:
             print("\t\t", line)
         print("\tType:", self.type)
-        print("\tAll-Day:", self.all_day_event)
+        print("\tAll-Day:", self.is_all_day_event)
+        print("\tReminder:", self.is_reminder)
         print("\tNoteid:", self.noteid)
         print("\tuid:", self.unid)
         print('\tFrom:', self.from_date)
