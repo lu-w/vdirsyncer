@@ -217,7 +217,12 @@ class LotusCalEntry(object):
         v = self._from_date()
         v = v.replace(tzinfo=pytz.utc)
         if self.is_all_day_event:
-            return v.replace(hour=0, minute=0, second=0, microsecond=0)
+            v = v.replace(hour=0, minute=0, second=0, microsecond=0)
+            # TODO workaround here (seems that anniversaries state the day
+            # before)
+            if self.type == CalEntryType.ANNIVERSARY:
+                return v + datetime.timedelta(days=1)
+            return v
         return v
 
     @property
@@ -250,6 +255,8 @@ class LotusCalEntry(object):
 
     @property
     def to_date(self):
+        if self.is_all_day_event and self.type == CalEntryType.ANNIVERSARY:
+            return self.from_date + datetime.timedelta(days=1)
         v = self._to_date()
         v = v.replace(tzinfo=pytz.utc)
         if self.is_all_day_event:
