@@ -241,6 +241,9 @@ class LotusCalEntry(object):
             fd = self.from_date
             # fd = fd.replace(hour=0, minute=0, second=0, microsecond=0)
             return fd + datetime.timedelta(days=1)
+        elif self.is_reminder:
+            fd = self.from_date
+            return fd + datetime.timedelta(minutes=1)
         # for line in self.entrydata:
             # print(line)
         raise KeyError("Entry misses to_date or not parseable")
