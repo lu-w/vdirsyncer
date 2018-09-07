@@ -11,10 +11,9 @@ from enum import Enum
 import pytz
 import icalendar
 
-from .base import Item, Storage
-from .. import exceptions
-from ..utils import expand_path
-from ..utils.http import request
+from .base import Storage
+from .. import exceptions, http, utils
+from ..vobject import Item
 
 lotus_logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ def prepare_auth(auth, username, password):
 
 def prepare_verify(verify, verify_fingerprint):
     if isinstance(verify, (str, bytes)):
-        verify = expand_path(verify)
+        verify = utils.expand_path(verify)
     elif not isinstance(verify, bool):
         raise exceptions.UserError('Invalid value for verify ({}), '
                                    'must be a path to a PEM-file or boolean.'
@@ -87,7 +86,7 @@ def prepare_verify(verify, verify_fingerprint):
 
 def prepare_client_cert(cert):
     if isinstance(cert, (str, bytes)):
-        cert = expand_path(cert)
+        cert = utils.expand_path(cert)
     elif isinstance(cert, list):
         cert = tuple(map(prepare_client_cert, cert))
     return cert
@@ -361,22 +360,22 @@ class LotusNotesWebStorage(Storage):
     A simple example::
 
         [pair holidays]
-        a = company_local
-        b = company_remote
+        a = "company_local"
+        b = "company_remote"
         collections = null
 
         [storage company_local]
-        type = filesystem
-        path = ~/.config/vdir/calendars/company/
-        fileext = .ics
+        type = "filesystem"
+        path = "~/.config/vdir/calendars/company/"
+        fileext = ".ics"
 
         [storage company_remote]
-        type = lotusnotesweb
-        url = https://domino.example.com
-        username = loginname
+        type = "lotusnotesweb"
+        url = "https://domino.example.com"
+        username = "loginname"
         calendars = [ "loginname", "coworker" ]
         freebusy = false
-        password = password
+        password = "password"
     '''
 
     start_date = None
@@ -448,7 +447,7 @@ class LotusNotesWebStorage(Storage):
         self._items = {}
         for calendar in self.calendars:
             url = self._calendar_url(calendar)
-            req_data = request('GET', url, headers=self._default_headers(),
+            req_data = http.request('GET', url, headers=self._default_headers(),
                                **self._settings)
             # recoding
             content = req_data.content.decode('utf-8').replace('\n', '')
