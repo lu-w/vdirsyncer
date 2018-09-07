@@ -1,6 +1,7 @@
 import logging
 
 import requests
+#import requests_cache
 
 from . import __version__
 from . import DOCS_HOME
@@ -181,3 +182,8 @@ def _fix_redirects(r, *args, **kwargs):
     if r.is_redirect:
         logger.debug('Rewriting status code from %s to 307', r.status_code)
         r.status_code = 307
+
+# requests_cache.install_cache(
+    # cache_name='.cache',
+    # backend='sqlite'
+# )
