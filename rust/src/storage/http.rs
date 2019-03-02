@@ -30,7 +30,7 @@ pub fn send_request(
 ) -> Fallible<reqwest::Response> {
     debug!("> {} {}", request.method(), request.url());
     for (name, value) in request.headers().iter() {
-        debug!("< {}: {:?}", name, value);
+        debug!("> {}: {:?}", name, value);
     }
     debug!("> {:?}", request.body());
     debug!("> ---");
