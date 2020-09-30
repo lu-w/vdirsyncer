@@ -302,9 +302,15 @@ class LotusCalEntry(object):
         else:
             event.add('summary', self.subject)
             if self.type == CalEntryType.MEETING:
-                event.add('categories', 'Meeting')
+                event.add('categories', ['Meeting'])
             elif self.type == CalEntryType.ANNIVERSARY:
-                event.add('categories', 'Anniversary')
+                event.add('categories', ['Anniversary'])
+            elif self.type == CalEntryType.REMINDER:
+                event.add('categories', ['Reminder'])
+            elif self.type == CalEntryType.ALL_DAY_EVENT:
+                event.add('categories', ['All day event'])
+            elif self.type == CalEntryType.APPOINTMENT:
+                event.add('categories', ['Appointment'])
 
         if self.is_all_day_event:
             # all day events have a date only
@@ -315,7 +321,7 @@ class LotusCalEntry(object):
             event.add('dtend', self.to_date)
 
         if not freebusy and self.created_by:
-            event.add('organzier', self.created_by)
+            event.add('organizer', self.created_by)
 
 		# event.add('dtstamp', datetime(2005,4,4,0,10,0,tzinfo=pytz.utc))
         if not freebusy and self.location:
@@ -325,8 +331,8 @@ class LotusCalEntry(object):
             event.add('status', 'confirmed')
         elif self.status.lower() in ("ghosts", "tentative",):
             event.add('status', 'tentative')
-        elif self.status.lower() in ("cancled",):
-            event.add('status', 'cancled')
+        elif self.status.lower() in ("canceled",):
+            event.add('status', 'canceled')
 
         calendar = icalendar.Calendar()
         calendar.add_component(event)
